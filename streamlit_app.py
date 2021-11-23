@@ -5,8 +5,9 @@ import cv2
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import base64
+from PIL import Image, ImageOps
 
-menu=['Home','Play game','Obb or Even']
+menu=['Home','Play game by camera','Play game by upload picture','Obb or Even']
 money=None
 st.sidebar.image('casino_pos.gif')
 choice = st.sidebar.selectbox('HY CASINO MENU:', menu)
@@ -59,7 +60,7 @@ if choice =='Home':
             c2=st.button('Very Yes')
         if (c1==True or c2==True):
             st.write('Please go to play game page')  
-elif choice == 'Play game':
+elif choice == 'Play game by camera':
     st.image('giphy_betmoney.gif')
     st.title("How much money you want to bet?")
     cap = cv2.VideoCapture(0)  # device 0
@@ -104,7 +105,24 @@ elif choice == 'Play game':
             st.write("Something wrong!!!")
         money =class_names[index]
         st.session_state['money'] = class_names[index]
-        
+elif choice == 'Play game by upload picture':
+    st.image('giphy_betmoney.gif')
+    st.title("How much money you want to bet?")
+    photo_uploaded = st.file_uploader('Upload your bet money here',type=['png','jpg','jpeg'])
+    if photo_uploaded != None:
+        image_np = np.asarray(bytearray(photo_uploaded.read()), dtype=np.uint8)
+        img = cv2.imdecode(image_np, 1)
+        st.image(img, channels='BGR')
+        img_resized = cv2.resize(img, (224,224))
+        img_array  = np.expand_dims(img_resized, axis=0)        #Expand dim
+        prediction = model.predict(img_array)                   #Prediction
+        index = np.argmax(prediction.flatten())
+        if prediction[0].max() >= 0.6:
+            st.write(f'You bet {class_names[index]}  VND to play "Obb or Even"')
+        else:
+            st.write("Something wrong!!!")
+        money =class_names[index]
+        st.session_state['money'] = class_names[index]      
 else: 
         st.image('mel-gibson-stupid.gif')
         money=st.session_state['money']
